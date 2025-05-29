@@ -1,4 +1,7 @@
+use minifb::{Window, WindowOptions};
+
 use crate::display::Display;
+use crate::Result;
 // 16bits program
 // nnn - (addr) lowest 12 bit 
 // n - lowest 4 bit of the instr 
@@ -17,7 +20,7 @@ use crate::display::Display;
 // 6xkk - LD Vx, byte - set Vx = kk
 // 7xkk - Add Vx, byte - Vx = Vx + kk
 
-let FONTSET: [u8; 80] = [
+const FONTSET: [u8; 80] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
     0x20, 0x60, 0x20, 0x20, 0x70, // 1
     0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
@@ -38,14 +41,14 @@ let FONTSET: [u8; 80] = [
 
 pub struct Chip8 {
     memory: [u8; 4096],
-    stack: [u16; 16]
+    stack: [u16; 16],
     pub registers: [u8; 16],
     pub I: u16,
     pub sound: u8,
     pub delay: u8,
     pub PC: u16,
-    pub SP: u16
-    display: Display
+    pub SP: u16,
+    display: Display,
 }
 
 impl Chip8 {
@@ -54,15 +57,16 @@ impl Chip8 {
             return Err("Program too large to fit the memory".into());
         }
         
-        let memory = [u8; 4096];
+        let mut memory = [0; 4096];
         memory[..80].copy_from_slice(&FONTSET);
         memory[512..512 + program.len()].copy_from_slice(program);
 
-        memory
+        Ok(memory)
     }
 
     pub fn new(program: &[u8]) -> Result<Self> {
-        let memory = init_memory(program)?;
+        let mut memory = Self::init_memory(program)?;
+        let mut display = Display::new()?; 
         Ok(Self {
             memory,
             stack: [0; 16],
@@ -70,11 +74,17 @@ impl Chip8 {
             sound: 0,
             delay: 0,
             PC: 0x200,
-            SP: 0
+            SP: 0,
+            I: 0,
+            display
         })
     }
 
-    pub fn run(&self) -> Result<()> {
+    pub fn run(&mut self) -> Result<()> {
+        loop {
+            self.display.draw().unwrap();
+        }
+
         Ok(())
     }
 }
