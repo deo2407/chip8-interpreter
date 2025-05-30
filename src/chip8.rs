@@ -1,6 +1,9 @@
 use minifb::{Window, WindowOptions};
+use std::time::Duration;
+use std::{thread, time};
 
-use crate::display::Display;
+use crate::audio::Beeper;
+use crate::display::{self, Display};
 use crate::Result;
 // 16bits program
 // nnn - (addr) lowest 12 bit 
@@ -44,14 +47,33 @@ pub struct Chip8 {
     stack: [u16; 16],
     pub registers: [u8; 16],
     pub I: u16,
-    pub sound: u8,
-    pub delay: u8,
+    pub sound_timer: u8,
+    pub delay_timer: u8,
     pub PC: u16,
     pub SP: u16,
+    pub beeper: Beeper,
     display: Display,
 }
 
 impl Chip8 {
+    pub fn new(program: &[u8]) -> Result<Self> {
+        let mut memory = Self::init_memory(program)?;
+        let mut display = Display::new()?;
+        let mut beeper = Beeper::new(); 
+        Ok(Self {
+            memory,
+            stack: [0; 16],
+            registers: [0; 16],
+            sound_timer: 30,
+            delay_timer: 0,
+            PC: 0x200,
+            SP: 0,
+            I: 0,
+            beeper,
+            display,
+        })
+    }
+
     fn init_memory(program: &[u8]) -> Result<[u8; 4096]> {
         if program.len() > 4096 - 512 {
             return Err("Program too large to fit the memory".into());
@@ -64,25 +86,53 @@ impl Chip8 {
         Ok(memory)
     }
 
-    pub fn new(program: &[u8]) -> Result<Self> {
-        let mut memory = Self::init_memory(program)?;
-        let mut display = Display::new()?; 
-        Ok(Self {
-            memory,
-            stack: [0; 16],
-            registers: [0; 16],
-            sound: 0,
-            delay: 0,
-            PC: 0x200,
-            SP: 0,
-            I: 0,
-            display
-        })
+    fn handle_timers(&mut self) {
+        if self.delay_timer > 0 {
+            self.delay_timer -= 1;
+        }
+
+        if self.sound_timer == 0 {
+            self.beeper.stop_beep();
+        }
+
+        if self.sound_timer > 0 {
+            self.beeper.start_beep();
+            self.sound_timer -= 1;
+        }
     }
 
     pub fn run(&mut self) -> Result<()> {
-        loop {
+        let mut offset = 0;
+        let mut frames_count = 0;
+        let frames_per_update = 20;
+
+        let frame_duration = Duration::from_micros(16_666);
+
+        while self.display.window.is_open() {
+            let time_start = time::Instant::now();
+
+            for y in 0..display::HEIGHT {
+                for x in 0..display::WIDTH {
+                    self.display.set(x, y, false);
+                    if (x + y + offset) % 4 == 0 {
+                        self.display.set(x, y, true);
+                    }
+                }
+            }   
+            frames_count += 1;
+            if frames_count >= frames_per_update {
+                offset = (offset + 1) % 4;
+                frames_count = 0;
+            }
+
+            self.handle_timers();
+
             self.display.draw().unwrap();
+
+            let elapsed = time_start.elapsed();
+            if elapsed < frame_duration {
+                thread::sleep(frame_duration - elapsed);
+            }
         }
 
         Ok(())

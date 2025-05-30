@@ -2,12 +2,12 @@ use minifb::{Window, WindowOptions};
 
 use crate::Result;
 
-const WIDTH: usize = 64;
-const HEIGHT: usize = 32;
-const SCALE: usize = 15;
+pub const WIDTH: usize = 64;
+pub const HEIGHT: usize = 32;
+const SCALE: usize = 25;
 
 pub struct Display {
-    window: Window,
+    pub window: Window,
     pub pixels: [bool; WIDTH * HEIGHT],
 }
 
@@ -19,14 +19,17 @@ impl Display {
         Ok(Self { window, pixels })
     }
     
-    fn set(&mut self, x: usize, y: usize, value: bool) {
+    pub fn set(&mut self, x: usize, y: usize, value: bool) {
         if x < WIDTH && y < HEIGHT {
-            self.pixels[y * HEIGHT + x] = value;
+            self.pixels[y * WIDTH + x] = value;
         }
     }
 
-    fn get(&self, x: usize, y: usize) -> bool {
-        self.pixels[y * HEIGHT + x]
+    pub fn get(&self, x: usize, y: usize) -> bool {
+        if x < WIDTH && y < HEIGHT {
+            return self.pixels[y * WIDTH + x];
+        }
+        false
     }
 
     fn from_u8_rgb(r: u8, g: u8, b: u8) -> u32 {

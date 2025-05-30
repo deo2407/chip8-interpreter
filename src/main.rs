@@ -1,5 +1,6 @@
 mod chip8;
 mod display;
+mod audio;
 
 use std::fs::File;
 use chip8::Chip8;
