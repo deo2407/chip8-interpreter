@@ -71,4 +71,12 @@ impl Display {
         self.window.update_with_buffer(&buffer, HEIGHT * SCALE, WIDTH * SCALE).unwrap();
         Ok(())
     }
+
+    pub fn clear(&mut self) {
+        for y in 0..HEIGHT {
+            for x in 0..WIDTH {
+                self.set(x, y, false);
+            }
+        }
+    }
 }

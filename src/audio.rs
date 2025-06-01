@@ -1,7 +1,7 @@
 use rodio::{source::SineWave, OutputStream, OutputStreamHandle, Sink, Source};
 use std::time::Duration;
 
-const tone: f32 = 600.0;
+const TONE: f32 = 600.0;
 
 pub struct Beeper {
     _stream: OutputStream,
@@ -23,7 +23,7 @@ impl Beeper {
         if self.sink.is_none() || self.sink.as_ref().unwrap().empty() {
             let sink = Sink::try_new(&self.stream_handle).unwrap();
 
-            let source = SineWave::new(tone).amplify(0.2).repeat_infinite();
+            let source = SineWave::new(TONE).amplify(0.2).repeat_infinite();
             sink.append(source);
             self.sink = Some(sink);
         }
