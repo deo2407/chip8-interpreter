@@ -1,6 +1,7 @@
 use minifb::{Window, WindowOptions};
 use std::time::Duration;
 use std::{thread, time};
+use rand::Rng;
 
 use crate::audio::Beeper;
 use crate::display::{self, Display};
@@ -263,7 +264,7 @@ impl Chip8 {
                         },
                         6 => {
                             let x = third(instruction) as usize;
-                            if (self.V[x] % 2 == 1) {
+                            if self.V[x] % 2 == 1 {
                                 self.V[0xF] = 1;
                             } else {
                                 self.V[0xF] = 0;
@@ -286,7 +287,7 @@ impl Chip8 {
                         },
                         0xE => {
                             let x = third(instruction) as usize;
-                            if (self.V[x] % 2 == 1) {
+                            if self.V[x] % 2 == 1 {
                                 self.V[0xF] = 1;
                             } else {
                                 self.V[0xF] = 0;
@@ -319,7 +320,20 @@ impl Chip8 {
                     self.disassemble(instruction, format!("JP {}, nnn", self.V[0]).as_str());
                 },
                 0xC => {
-                    todo!();
+                    let random_number: u8 = rand::thread_rng().r#gen(); 
+                    let x = third(instruction) as usize;
+                    let kk = kk(instruction);
+                    self.V[x] = random_number & kk;
+
+                    self.pc += 2;
+                    self.disassemble(instruction, "RND Vx, byte");
+                },
+                0xD => {
+                    
+
+                    self.pc += 2;
+                    self.draw_screen = true;
+                    self.disassemble(instruction, "DRW Vx, Vy, nibble");
                 },
                 _ => {
                     return Err("Unkown instruction".into());
@@ -342,6 +356,7 @@ impl Chip8 {
 
             if self.draw_screen {
                 self.display.draw().unwrap();
+                self.draw_screen = false;
             }
 
             let elapsed = time_start.elapsed();

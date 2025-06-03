@@ -2,6 +2,8 @@ mod chip8;
 mod display;
 mod audio;
 
+extern crate rand;
+
 use std::fs::File;
 use chip8::Chip8;
 
