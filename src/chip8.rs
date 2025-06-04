@@ -137,6 +137,10 @@ impl Chip8 {
         }
     } 
 
+    fn update_buffer_with_sprites(&mut self, x: u8, y: u8, n: u16) {
+        todo!();
+    }
+
     fn execute(&mut self, instruction: u16) -> Result<()> {
         match instruction {
             0x00E0 => { 
@@ -329,11 +333,82 @@ impl Chip8 {
                     self.disassemble(instruction, "RND Vx, byte");
                 },
                 0xD => {
+                    let x = third(instruction) as usize;
+                    let y = second(instruction) as usize;
+                    let n = first(instruction);
                     
+                    let x_coord = self.V[x];
+                    let y_coord = self.V[y];
+
+                    self.update_buffer_with_sprites(x_coord, y_coord, n);
 
                     self.pc += 2;
                     self.draw_screen = true;
                     self.disassemble(instruction, "DRW Vx, Vy, nibble");
+                },
+                0xE => {
+                    match kk(instruction) {
+                        0x9E => {
+                            todo!();
+                        },
+                        0xA1 => {
+                            todo!();
+                        },
+                        _ => {
+                            return Err("Unkown instruction".into());
+                        }
+                    }
+                },
+                0xF => {
+                    match kk(instruction) {
+                        0x07 => {
+                            let x = third(instruction) as usize;
+                            self.V[x] = self.delay_reg;
+
+                            self.pc += 2;
+                            self.disassemble(instruction, "LD Vx, DT");
+                        },
+                        0x0A => {
+                            todo!();
+                        },
+                        0x15 => {
+                            let x = third(instruction) as usize;
+                            self.delay_reg = self.V[x];
+
+                            self.pc += 2;
+                            self.disassemble(instruction, "LD DT, Vx");
+                        },
+                        0x18 => {
+                            let x = third(instruction) as usize;
+                            self.sound_reg = self.V[x];
+
+                            self.pc += 2;
+                            self.disassemble(instruction, "LD ST, Vx");
+                            
+                        },
+                        0x1E => {
+                            let x = third(instruction) as usize;
+                            self.I += self.V[x];
+
+                            self.pc += 2;
+                            self.disassemble(instruction, "ADD I, Vx");
+                        },
+                        0x29 => {
+                            todo!();
+                        },
+                        0x33 => {
+                            todo!();
+                        },
+                        0x55 => {
+                            todo!();
+                        },
+                        0x65 => {
+                            todo!();
+                        },
+                        _ => {
+                            return Err("Unkown instruction".into());
+                        }
+                    }
                 },
                 _ => {
                     return Err("Unkown instruction".into());
